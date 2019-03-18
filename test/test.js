@@ -85,4 +85,28 @@ contract('HelloWorldToken', ([initialHolder, recipient, trustedAccount]) => {
             assert.equal(delegatedFunds, 0)
         });
     });
+    describe('events:', async () => {
+        it('fires event on transfer', async () => {
+            const res = await HWT.transfer(recipient, 10, { from: initialHolder });
+            const transferLog = res.logs.find(element => element.event.match('Transfer'));
+            assert.equal(transferLog.args.from, initialHolder);
+            assert.strictEqual(transferLog.args.to, recipient);
+            assert.strictEqual(transferLog.args.value.toString(), '10');
+        });
+        it('fires event on approval', async () => {
+            const res = await HWT.approve(trustedAccount, initialSupply, { from: initialHolder });
+            const log = res.logs.find(element => element.event.match('Approve'));
+            assert.equal(log.args.owner, initialHolder);
+            assert.equal(log.args.spender, trustedAccount);
+            assert.equal(log.args.value, initialSupply);
+        });
+        it('fires event on transferFrom', async () => {
+            await HWT.approve(trustedAccount, initialSupply, { from: initialHolder });
+            const res = await HWT.transferFrom(initialHolder, recipient, 100, { from: trustedAccount });
+            const log = res.logs.find(element => element.event.match('Transfer'));
+            assert.equal(log.args.from, initialHolder);
+            assert.equal(log.args.to, recipient);
+            assert.equal(log.args.value, '100');
+        });
+    })
 });

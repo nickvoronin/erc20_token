@@ -21,6 +21,17 @@ contract HelloWorldToken is Erc20Compliant {
     mapping(address => mapping(address => uint256)) allowed;
     uint256 _totalSupply;
 
+    event Transfer(
+        address from,
+        address to,
+        uint value
+    );
+    event Approve(
+        address owner,
+        address spender,
+        uint256 value
+    );
+
     constructor(
         uint256 mintTotal,
         string memory tokenName,
@@ -59,6 +70,7 @@ contract HelloWorldToken is Erc20Compliant {
         require(balanceOf(msg.sender) >= value);
         balances[msg.sender] -= value;
         balances[to] += value;
+        emit Transfer(msg.sender, to, value);
         return true;
     }
 
@@ -84,6 +96,7 @@ contract HelloWorldToken is Erc20Compliant {
     function approve(address spender, uint256 value) public returns (bool) {
         require(balances[msg.sender] >= value);
         allowed[msg.sender][spender] = value;
+        emit Approve(msg.sender, spender, value);
         return true;
     }
 
@@ -101,5 +114,7 @@ contract HelloWorldToken is Erc20Compliant {
         balances[from] -= value;
         allowed[from][to] -= value;
         balances[to] += value;
+        emit Transfer(from, to, value);
+        return true;
     }
 }

@@ -72,7 +72,7 @@ contract('HelloWorldToken', ([initialHolder, recipient, trustedAccount]) => {
             assert.equal(allowance.toNumber(), 0, 'Trusted account should not be allowed to spend initial holder funds');
         });
     });
-    describe('delet:', async () => {
+    describe('transfers funds from another account:', async () => {
         it('initial holder should approve withdrawal to trusted account', async () => {
             await HWT.approve(trustedAccount, initialSupply, { from: initialHolder });
             await HWT.transferFrom(initialHolder, recipient, 20, { from: trustedAccount });

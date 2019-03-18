@@ -1,4 +1,6 @@
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.2;
+
+import 'openzeppelin-solidity/contracts/math/SafeMath.sol';
 
 
 contract Erc20Compliant {
@@ -17,6 +19,8 @@ contract Erc20Compliant {
 }
 
 contract HelloWorldToken is Erc20Compliant {
+    using SafeMath for uint256;
+
     mapping(address => uint256) balances;
     mapping(address => mapping(address => uint256)) allowed;
     uint256 _totalSupply;
@@ -68,8 +72,8 @@ contract HelloWorldToken is Erc20Compliant {
     */
     function transfer(address to, uint256 value) public returns (bool success) {
         require(balanceOf(msg.sender) >= value);
-        balances[msg.sender] -= value;
-        balances[to] += value;
+        balances[msg.sender] = balances[msg.sender].sub(value);
+        balances[to] = balances[to].add(value);
         emit Transfer(msg.sender, to, value);
         return true;
     }
@@ -111,9 +115,9 @@ contract HelloWorldToken is Erc20Compliant {
     function transferFrom(address from, address to, uint256 value) public returns (bool) {
         uint256 allowedSpendings = allowance(from, msg.sender);
         require(allowedSpendings >= value);
-        balances[from] -= value;
-        allowed[from][to] -= value;
-        balances[to] += value;
+        balances[from] = balances[from].sub(value);
+        allowed[from][msg.sender] = allowed[from][msg.sender].sub(value);
+        balances[to] = balances[to].add(value);
         emit Transfer(from, to, value);
         return true;
     }

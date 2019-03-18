@@ -1,0 +1,31 @@
+{
+  "name": "erc20",
+  "version": "0.0.1",
+  "description": "ERC-20 compliant token",
+  "main": "truffle-config.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "truffle test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nickvoronin/erc20_token.git"
+  },
+  "keywords": [
+    "ethereum",
+    "erc-20",
+    "smart",
+    "contract"
+  ],
+  "author": "Nick Voronin",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/nickvoronin/erc20_token/issues"
+  },
+  "homepage": "https://github.com/nickvoronin/erc20_token#readme",
+  "dependencies": {
+    "openzeppelin-solidity": "^2.2.0"
+  }
+}

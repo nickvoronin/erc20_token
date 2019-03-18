@@ -65,6 +65,12 @@ contract HelloWorldToken is Erc20Compliant {
         return balances[owner];
     }
 
+    /**
+     * @dev Transfer token for a specified addresses
+     * @param from The address to transfer from.
+     * @param to The address to transfer to.
+     * @param value The amount to be transferred.
+     */
     function _transfer(address from, address to, uint256 value) internal {
         require(balances[from] >= value);
         require(to != address(0));
@@ -75,13 +81,19 @@ contract HelloWorldToken is Erc20Compliant {
 
     }
 
-    function _approve(address from, address to, uint256 value) internal {
-        require(from != address(0));
-        require(to != address(0));
-        require(balances[from] >= value);
+    /**
+     * @dev Approve an address to spend another addresses' tokens.
+     * @param owner The address that owns the tokens.
+     * @param spender The address that will spend the tokens.
+     * @param value The number of tokens that can be spent.
+     */
+    function _approve(address owner, address spender, uint256 value) internal {
+        require(owner != address(0));
+        require(spender != address(0));
+        require(balances[owner] >= value);
 
-        allowed[from][to] = value;
-        emit Approve(from, to, value);
+        allowed[owner][spender] = value;
+        emit Approve(owner, spender, value);
     }
     /**
     * @dev Transfer token to a specified address

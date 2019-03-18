@@ -3,8 +3,8 @@ pragma solidity ^0.5.0;
 
 contract Erc20Compliant {
     // required:
-    function totalSupply() public view returns (uint256);
-//    function balanceOf(address tokenOwner) public view returns (uint256);
+    function totalSupply() public view returns (uint256 totalSupply);
+    function balanceOf(address tokenOwner) public view returns (uint256 balance);
 //    function transfer(address to, uint256 tokens) public returns (bool);
 //    function transferFrom(address from, address to, uint256 tokens) public returns (bool);
 //    function approve(address spender, uint256 tokens) public returns (bool);
@@ -31,6 +31,10 @@ contract HelloWorldToken is Erc20Compliant {
         name = tokenName;
         decimals = tokenDecimals;
         symbol = tokenSymbol;
+    }
+
+    function balanceOf(address owner) public view returns (uint256) {
+        return balances[owner];
     }
     
     function totalSupply() public view returns (uint256) {

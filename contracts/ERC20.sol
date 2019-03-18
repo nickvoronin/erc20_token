@@ -65,16 +65,31 @@ contract HelloWorldToken is Erc20Compliant {
         return balances[owner];
     }
 
+    function _transfer(address from, address to, uint256 value) internal {
+        require(balances[from] >= value);
+        require(to != address(0));
+
+        balances[from] = balances[from].sub(value);
+        balances[to] = balances[to].add(value);
+        emit Transfer(from, to, value);
+
+    }
+
+    function _approve(address from, address to, uint256 value) internal {
+        require(from != address(0));
+        require(to != address(0));
+        require(balances[from] >= value);
+
+        allowed[from][to] = value;
+        emit Approve(from, to, value);
+    }
     /**
     * @dev Transfer token to a specified address
     * @param to The address to transfer to.
     * @param value The amount to be transferred.
     */
     function transfer(address to, uint256 value) public returns (bool success) {
-        require(balanceOf(msg.sender) >= value);
-        balances[msg.sender] = balances[msg.sender].sub(value);
-        balances[to] = balances[to].add(value);
-        emit Transfer(msg.sender, to, value);
+        _transfer(msg.sender, to, value);
         return true;
     }
 
@@ -98,9 +113,7 @@ contract HelloWorldToken is Erc20Compliant {
      * @param value The amount of tokens to be spent.
      */
     function approve(address spender, uint256 value) public returns (bool) {
-        require(balances[msg.sender] >= value);
-        allowed[msg.sender][spender] = value;
-        emit Approve(msg.sender, spender, value);
+        _approve(msg.sender, spender, value);
         return true;
     }
 
@@ -115,10 +128,9 @@ contract HelloWorldToken is Erc20Compliant {
     function transferFrom(address from, address to, uint256 value) public returns (bool) {
         uint256 allowedSpendings = allowance(from, msg.sender);
         require(allowedSpendings >= value);
-        balances[from] = balances[from].sub(value);
-        allowed[from][msg.sender] = allowed[from][msg.sender].sub(value);
-        balances[to] = balances[to].add(value);
-        emit Transfer(from, to, value);
+
+        _transfer(from, to, value);
+        _approve(from, msg.sender, allowed[from][msg.sender].sub(value));
         return true;
     }
 }

@@ -2,10 +2,11 @@ const { shouldRevert } = require('./helpers');
 
 const HelloWorldToken = artifacts.require('HelloWorldToken');
 
+const initialSupply = 1000;
 let HWT;
-contract('HelloWorldToken', (accounts) => {
+contract('HelloWorldToken', ([initialHolder, recipient]) => {
     beforeEach(async () => {
-        HWT = await HelloWorldToken.new(1000, 'HWToken', 'HWT', 5 );
+        HWT = await HelloWorldToken.new(initialSupply, 'HWToken', 'HWT', 5 );
     });
     describe('init:', async () => {
         it('should set token name', async () => {
@@ -22,41 +23,41 @@ contract('HelloWorldToken', (accounts) => {
         });
         it('sets total minted coins', async () => {
             const totalSupply = await HWT.totalSupply.call();
-            assert.equal(totalSupply, 1000, 'Should put all money on first account balance');
+            assert.equal(totalSupply, initialSupply, 'Should put all money on first account balance');
         });
         it('puts minted coins to initiator balance', async () => {
-            const balance = await HWT.balanceOf.call(accounts[0]);
-            assert.equal(balance, 1000, 'Should put all money on first account balance');
+            const balance = await HWT.balanceOf.call(initialHolder);
+            assert.equal(balance, initialSupply, 'Should put all money on first account balance');
         });
     });
     describe('transfers:', async () => {
         it('should transfer money', async () => {
-            const balanceBefore = await HWT.balanceOf.call(accounts[1]);
+            const balanceBefore = await HWT.balanceOf.call(recipient);
             assert.equal(balanceBefore.toNumber(), 0, 'Recipient should have zero balance');
-            await HWT.transfer(accounts[1], 10, { from: accounts[0] });
-            const balanceAfter = await HWT.balanceOf(accounts[1]);
+            await HWT.transfer(recipient, 10, { from: initialHolder });
+            const balanceAfter = await HWT.balanceOf(recipient);
             assert.equal(balanceAfter.toNumber(), 10, 'Recipient should receive transferred money');
         });
         it('should revert transaction on insufficient funds', async () => {
-            const balanceBefore = await HWT.balanceOf.call(accounts[1]);
+            const balanceBefore = await HWT.balanceOf.call(recipient);
             assert.equal(balanceBefore, 0, 'Recipient should have zero balance');
-            await shouldRevert(HWT.transfer(accounts[0], 1001));
-            const balanceAfter = await HWT.balanceOf.call(accounts[1]);
+            await shouldRevert(HWT.transfer(initialHolder, initialSupply + 1));
+            const balanceAfter = await HWT.balanceOf.call(recipient);
             assert.equal(balanceAfter, 0, 'Recipient should still have zero balance');
         });
         it('should handle zero transfer', async () => {
-            await HWT.transfer(accounts[1], 0, { from: accounts[0] });
-            const senderBalance = await HWT.balanceOf.call(accounts[0]);
-            const recipientBalance = await HWT.balanceOf.call(accounts[1]);
-            assert.equal(senderBalance.toNumber(), 1000);
+            await HWT.transfer(recipient, 0, { from: initialHolder });
+            const senderBalance = await HWT.balanceOf.call(initialHolder);
+            const recipientBalance = await HWT.balanceOf.call(recipient);
+            assert.equal(senderBalance.toNumber(), initialSupply);
             assert.equal(recipientBalance.toNumber(), 0);
         });
         it('should transfer all money', async () => {
-            await HWT.transfer(accounts[1], 1000, { from: accounts[0] });
-            const senderBalance = await HWT.balanceOf.call(accounts[0]);
-            const recipientBalance = await HWT.balanceOf.call(accounts[1]);
+            await HWT.transfer(recipient, initialSupply, { from: initialHolder });
+            const senderBalance = await HWT.balanceOf.call(initialHolder);
+            const recipientBalance = await HWT.balanceOf.call(recipient);
             assert.equal(senderBalance.toNumber(), 0, 'Should have exhausted balance');
-            assert.equal(recipientBalance.toNumber(), 1000, 'Should receive all money from the first account');
+            assert.equal(recipientBalance.toNumber(), initialSupply, 'Should receive all money from the first account');
         });
     });
 });

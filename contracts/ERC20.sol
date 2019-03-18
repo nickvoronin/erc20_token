@@ -8,7 +8,7 @@ contract Erc20Compliant {
     function transfer(address to, uint256 value) public returns (bool success);
     function transferFrom(address from, address to, uint256 value) public returns (bool);
     function approve(address spender, uint256 value) public returns (bool);
-    function allowance(address owner, address spender) public returns (bool);
+    function allowance(address owner, address spender) public returns (uint256 remaining);
 
     // optional:
     string public name;
@@ -18,6 +18,7 @@ contract Erc20Compliant {
 
 contract HelloWorldToken is Erc20Compliant {
     mapping(address => uint256) balances;
+    mapping(address => mapping(address => uint256)) allowed;
     uint256 _totalSupply;
 
     constructor(
@@ -67,8 +68,8 @@ contract HelloWorldToken is Erc20Compliant {
      * @param spender address The address which will spend the funds.
      * @return A uint256 specifying the amount of tokens still available for the spender.
      */
-    function allowance(address owner, address spender) public returns (bool) {
-
+    function allowance(address owner, address spender) public returns (uint256 remaining) {
+        return allowed[owner][spender];
     }
 
     /**
@@ -81,7 +82,9 @@ contract HelloWorldToken is Erc20Compliant {
      * @param value The amount of tokens to be spent.
      */
     function approve(address spender, uint256 value) public returns (bool) {
-
+        require(balances[msg.sender] >= value);
+        allowed[msg.sender][spender] = value;
+        return true;
     }
 
     /**
@@ -93,6 +96,10 @@ contract HelloWorldToken is Erc20Compliant {
      * @param value uint256 the amount of tokens to be transferred
      */
     function transferFrom(address from, address to, uint256 value) public returns (bool) {
-
+        uint256 allowedSpendings = allowance(from, msg.sender);
+        require(allowedSpendings >= value);
+        balances[from] -= value;
+        allowed[from][to] -= value;
+        balances[to] += value;
     }
 }

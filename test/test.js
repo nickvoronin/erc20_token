@@ -4,7 +4,7 @@ const HelloWorldToken = artifacts.require('HelloWorldToken');
 
 const initialSupply = 1000;
 let HWT;
-contract('HelloWorldToken', ([initialHolder, recipient]) => {
+contract('HelloWorldToken', ([initialHolder, recipient, trustedAccount]) => {
     beforeEach(async () => {
         HWT = await HelloWorldToken.new(initialSupply, 'HWToken', 'HWT', 5 );
     });
@@ -58,6 +58,31 @@ contract('HelloWorldToken', ([initialHolder, recipient]) => {
             const recipientBalance = await HWT.balanceOf.call(recipient);
             assert.equal(senderBalance.toNumber(), 0, 'Should have exhausted balance');
             assert.equal(recipientBalance.toNumber(), initialSupply, 'Should receive all money from the first account');
+        });
+    });
+    describe('delegates funds transfer', async () => {
+        it('should allow trusted account to spend funds', async () => {
+            await HWT.approve(trustedAccount, initialSupply, { from: initialHolder });
+            const allowance = await HWT.allowance.call(initialHolder, trustedAccount);
+            assert.equal(allowance.toNumber(), initialSupply, 'Trusted account should be allowed to spend initial holder funds');
+        });
+        it('should not delegate funds exceeding the balance', async () => {
+            await shouldRevert(HWT.approve(trustedAccount, initialSupply + 1, { from: initialHolder }));
+            const allowance = await HWT.allowance.call(initialHolder, trustedAccount);
+            assert.equal(allowance.toNumber(), 0, 'Trusted account should not be allowed to spend initial holder funds');
+        });
+    });
+    describe('delet:', async () => {
+        it('initial holder should approve withdrawal to trusted account', async () => {
+            await HWT.approve(trustedAccount, initialSupply, { from: initialHolder });
+            await HWT.transferFrom(initialHolder, recipient, 20, { from: trustedAccount });
+            const recipientBalance = await HWT.balanceOf.call(recipient);
+            assert.equal(recipientBalance.toNumber(), 20);
+        });
+        it('doesnt approve value exceeding the balance', async () => {
+            await shouldRevert(HWT.approve(trustedAccount, initialSupply + 1, { from: initialHolder }));
+            const delegatedFunds = await HWT.allowance.call(initialHolder, trustedAccount);
+            assert.equal(delegatedFunds, 0)
         });
     });
 });

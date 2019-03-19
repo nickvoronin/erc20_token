@@ -67,9 +67,9 @@ contract('HelloWorldToken', ([initialHolder, recipient, trustedAccount]) => {
             assert.equal(allowance.toNumber(), initialSupply, 'Trusted account should be allowed to spend initial holder funds');
         });
         it('should not delegate funds exceeding the balance', async () => {
-            await shouldRevert(HWT.approve(trustedAccount, initialSupply + 1, { from: initialHolder }));
+            await HWT.approve(trustedAccount, initialSupply + 1, { from: initialHolder });
             const allowance = await HWT.allowance.call(initialHolder, trustedAccount);
-            assert.equal(allowance.toNumber(), 0, 'Trusted account should not be allowed to spend initial holder funds');
+            assert.equal(allowance.toNumber(), initialSupply + 1, 'Trusted account should not be allowed to spend initial holder funds');
         });
     });
     describe('transfers funds from another account:', async () => {
@@ -79,10 +79,10 @@ contract('HelloWorldToken', ([initialHolder, recipient, trustedAccount]) => {
             const recipientBalance = await HWT.balanceOf.call(recipient);
             assert.equal(recipientBalance.toNumber(), 20);
         });
-        it('doesnt approve value exceeding the balance', async () => {
-            await shouldRevert(HWT.approve(trustedAccount, initialSupply + 1, { from: initialHolder }));
-            const delegatedFunds = await HWT.allowance.call(initialHolder, trustedAccount);
-            assert.equal(delegatedFunds, 0)
+        it('should approve value exceeding the balance', async () => {
+            await HWT.approve(trustedAccount, 100, { from: recipient });
+            const delegatedFunds = await HWT.allowance.call(recipient, trustedAccount);
+            assert.equal(delegatedFunds, 100)
         });
     });
     describe('events:', async () => {

@@ -90,7 +90,6 @@ contract HelloWorldToken is Erc20Compliant {
     function _approve(address owner, address spender, uint256 value) internal {
         require(owner != address(0));
         require(spender != address(0));
-        require(balances[owner] >= value);
 
         allowed[owner][spender] = value;
         emit Approve(owner, spender, value);

@@ -3,57 +3,56 @@ pragma solidity ^0.5.2;
 import 'openzeppelin-solidity/contracts/math/SafeMath.sol';
 
 
-contract Erc20Compliant {
+interface Erc20Compliant {
     // required:
-    function totalSupply() public view returns (uint256);
-    function balanceOf(address tokenOwner) public view returns (uint256 balance);
-    function transfer(address to, uint256 value) public returns (bool success);
-    function transferFrom(address from, address to, uint256 value) public returns (bool);
-    function approve(address spender, uint256 value) public returns (bool);
-    function allowance(address owner, address spender) public returns (uint256 remaining);
-
-    // optional:
-    string public name;
-    string public symbol;
-    uint8 public decimals;
+    function totalSupply() external view returns (uint256);
+    function balanceOf(address tokenOwner) external view returns (uint256 balance);
+    function transfer(address to, uint256 value) external returns (bool success);
+    function transferFrom(address from, address to, uint256 value) external returns (bool);
+    function approve(address spender, uint256 value) external returns (bool);
+    function allowance(address owner, address spender) external returns (uint256 remaining);
 }
 
 contract HelloWorldToken is Erc20Compliant {
     using SafeMath for uint256;
 
-    mapping(address => uint256) balances;
-    mapping(address => mapping(address => uint256)) allowed;
-    uint256 _totalSupply;
+    string public name;
+    string public symbol;
+    uint8 public decimals;
+
+    mapping(address => uint256) internal balances_;
+    mapping(address => mapping(address => uint256)) internal allowed_;
+    uint256 internal totalSupply_;
 
     event Transfer(
-        address from,
-        address to,
-        uint value
+        address indexed from,
+        address indexed to,
+        uint256 value
     );
     event Approve(
-        address owner,
-        address spender,
+        address indexed owner,
+        address indexed spender,
         uint256 value
     );
 
     constructor(
-        uint256 mintTotal,
-        string memory tokenName,
-        string memory tokenSymbol,
-        uint8 tokenDecimals
+        uint256 _mintTotal,
+        string memory _tokenName,
+        string memory _tokenSymbol,
+        uint8 _tokenDecimals
     ) public {
-        _totalSupply = mintTotal;
-        balances[msg.sender] = _totalSupply;
-        name = tokenName;
-        decimals = tokenDecimals;
-        symbol = tokenSymbol;
+        totalSupply_ = _mintTotal;
+        balances_[msg.sender] = totalSupply_;
+        name = _tokenName;
+        decimals = _tokenDecimals;
+        symbol = _tokenSymbol;
     }
 
     /**
      * @dev Total number of tokens in existence
      */
-    function totalSupply() public view returns (uint256) {
-        return _totalSupply;
+    function totalSupply() external view returns (uint256) {
+        return totalSupply_;
     }
 
     /**
@@ -61,45 +60,15 @@ contract HelloWorldToken is Erc20Compliant {
      * @param owner The address to query the balance of.
      * @return A uint256 representing the amount owned by the passed address.
      */
-    function balanceOf(address owner) public view returns (uint256) {
-        return balances[owner];
-    }
-
-    /**
-     * @dev Transfer token for a specified addresses
-     * @param from The address to transfer from.
-     * @param to The address to transfer to.
-     * @param value The amount to be transferred.
-     */
-    function _transfer(address from, address to, uint256 value) internal {
-        require(balances[from] >= value);
-        require(to != address(0));
-
-        balances[from] = balances[from].sub(value);
-        balances[to] = balances[to].add(value);
-        emit Transfer(from, to, value);
-
-    }
-
-    /**
-     * @dev Approve an address to spend another addresses' tokens.
-     * @param owner The address that owns the tokens.
-     * @param spender The address that will spend the tokens.
-     * @param value The number of tokens that can be spent.
-     */
-    function _approve(address owner, address spender, uint256 value) internal {
-        require(owner != address(0));
-        require(spender != address(0));
-
-        allowed[owner][spender] = value;
-        emit Approve(owner, spender, value);
+    function balanceOf(address owner) external view returns (uint256) {
+        return balances_[owner];
     }
     /**
     * @dev Transfer token to a specified address
     * @param to The address to transfer to.
     * @param value The amount to be transferred.
     */
-    function transfer(address to, uint256 value) public returns (bool success) {
+    function transfer(address to, uint256 value) external returns (bool success) {
         _transfer(msg.sender, to, value);
         return true;
     }
@@ -110,8 +79,8 @@ contract HelloWorldToken is Erc20Compliant {
      * @param spender address The address which will spend the funds.
      * @return A uint256 specifying the amount of tokens still available for the spender.
      */
-    function allowance(address owner, address spender) public returns (uint256 remaining) {
-        return allowed[owner][spender];
+    function allowance(address owner, address spender) external returns (uint256 remaining) {
+        return allowed_[owner][spender];
     }
 
     /**
@@ -123,7 +92,7 @@ contract HelloWorldToken is Erc20Compliant {
      * @param spender The address which will spend the funds.
      * @param value The amount of tokens to be spent.
      */
-    function approve(address spender, uint256 value) public returns (bool) {
+    function approve(address spender, uint256 value) external returns (bool) {
         _approve(msg.sender, spender, value);
         return true;
     }
@@ -136,12 +105,42 @@ contract HelloWorldToken is Erc20Compliant {
      * @param to address The address which you want to transfer to
      * @param value uint256 the amount of tokens to be transferred
      */
-    function transferFrom(address from, address to, uint256 value) public returns (bool) {
-        uint256 allowedSpendings = allowance(from, msg.sender);
+    function transferFrom(address from, address to, uint256 value) external returns (bool) {
+        uint256 allowedSpendings = allowed_[from][msg.sender];
         require(allowedSpendings >= value);
 
+        _approve(from, msg.sender, allowed_[from][msg.sender].sub(value));
+
         _transfer(from, to, value);
-        _approve(from, msg.sender, allowed[from][msg.sender].sub(value));
         return true;
+    }
+
+    /**
+     * @dev Transfer token for a specified addresses
+     * @param from The address to transfer from.
+     * @param to The address to transfer to.
+     * @param value The amount to be transferred.
+     */
+    function _transfer(address from, address to, uint256 value) internal {
+        require(balances_[from] >= value);
+        require(to != address(0));
+
+        balances_[from] = balances_[from].sub(value);
+        balances_[to] = balances_[to].add(value);
+        emit Transfer(from, to, value);
+    }
+
+    /**
+     * @dev Approve an address to spend another addresses' tokens.
+     * @param owner The address that owns the tokens.
+     * @param spender The address that will spend the tokens.
+     * @param value The number of tokens that can be spent.
+     */
+    function _approve(address owner, address spender, uint256 value) internal {
+        require(owner != address(0));
+        require(spender != address(0));
+
+        allowed_[owner][spender] = value;
+        emit Approve(owner, spender, value);
     }
 }
